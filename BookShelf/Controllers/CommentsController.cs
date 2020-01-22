@@ -36,12 +36,13 @@ namespace BookShelf.Controllers
         // GET: Comments/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+           
             if (id == null)
             {
                 return NotFound();
             }
-            var user = await GetCurrentUserAsync();
 
+            var user = await GetCurrentUserAsync();
             var comment = await _context.Comment
                 .Where(a => a.ApplicationUserId == user.Id)
                 .Include(c => c.ApplicationUser)
@@ -97,6 +98,7 @@ namespace BookShelf.Controllers
             var comment = await _context.Comment.FindAsync(id);
 
             var user = await GetCurrentUserAsync();
+            comment.ApplicationUserId = user.Id;
 
 
             if (comment == null)
