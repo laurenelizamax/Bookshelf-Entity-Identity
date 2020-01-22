@@ -56,7 +56,8 @@ namespace BookShelf.Controllers
         }
 
         // GET: Comments/Create
-        public IActionResult Create()
+        [HttpGet("Comments/Create/{bookId}")]
+        public IActionResult Create([FromRoute]int bookId)
         {
             ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id");
             ViewData["BookId"] = new SelectList(_context.Book, "Id", "Id");
@@ -66,17 +67,21 @@ namespace BookShelf.Controllers
         // POST: Comments/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost("Comments/Create/{bookId}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Text,ApplicationUserId,BookId")] Comment comment)
+        public async Task<IActionResult> Create(int bookId,
+            [Bind("Id,Text,ApplicationUserId,BookId")] Comment comment)
         {
+            var user = await GetCurrentUserAsync();
+            comment.BookId = bookId;
+            comment.ApplicationUserId = user.Id;
+
             if (ModelState.IsValid)
             {
                 _context.Add(comment);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "Books", new {id = bookId});
             }
-            ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", comment.ApplicationUserId);
             ViewData["BookId"] = new SelectList(_context.Book, "Id", "Id", comment.BookId);
             return View(comment);
         }
@@ -90,11 +95,14 @@ namespace BookShelf.Controllers
             }
 
             var comment = await _context.Comment.FindAsync(id);
+
+            var user = await GetCurrentUserAsync();
+
+
             if (comment == null)
             {
                 return NotFound();
             }
-            ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", comment.ApplicationUserId);
             ViewData["BookId"] = new SelectList(_context.Book, "Id", "Id", comment.BookId);
             return View(comment);
         }
@@ -102,14 +110,18 @@ namespace BookShelf.Controllers
         // POST: Comments/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost("Comments/Edit/{bookId}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Text,ApplicationUserId,BookId")] Comment comment)
+        public async Task<IActionResult> Edit(int id, int bookId, [Bind("Id,Text,ApplicationUserId,BookId")] Comment comment)
         {
             if (id != comment.Id)
             {
                 return NotFound();
             }
+
+            var user = await GetCurrentUserAsync();
+            comment.BookId = bookId;
+            comment.ApplicationUserId = user.Id;
 
             if (ModelState.IsValid)
             {
@@ -129,9 +141,8 @@ namespace BookShelf.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "Books", new { id = bookId });
             }
-            ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", comment.ApplicationUserId);
             ViewData["BookId"] = new SelectList(_context.Book, "Id", "Id", comment.BookId);
             return View(comment);
         }
@@ -164,7 +175,8 @@ namespace BookShelf.Controllers
             var comment = await _context.Comment.FindAsync(id);
             _context.Comment.Remove(comment);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return RedirectToAction("Index","Books");
         }
 
         private bool CommentExists(int id)
