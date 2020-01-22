@@ -42,15 +42,18 @@
         </dd>
 
         <dt class="col-sm-2">Comments</dt>
-
+    </dl>
         @foreach (var item in Model.Comments)
         {
-            
-                @Html.DisplayFor(modelItem => item.Text) <br />
-            
+
+            @Html.DisplayFor(modelItem => item.Text)
+            <br />
+            <a asp-action="Edit" asp-route-id="@Model.Id" asp-controller="Comments">Edit Comment</a> <br />
+            <a asp-action="Delete" asp-route-id="@Model.Id" asp-controller="Comments">Delete Comment</a>
         }
-    </dl>
+    
 </div>
+<br />
 <div>
     <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
     <a asp-action="Create" asp-route-id="@Model.Id" asp-controller="Comments">Leave A Comment</a> |
