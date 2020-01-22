@@ -28,8 +28,9 @@ namespace BookShelf.Controllers
         // GET: Books
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Book.Include(b => b.ApplicationUser).Include(b => b.Author);
-            return View(await applicationDbContext.ToListAsync());
+            var user = await GetCurrentUserAsync();
+            var books = _context.Book.Where(a => a.ApplicationUserId == user.Id);
+            return View(await books.ToListAsync());
         }
 
         // GET: Books/Details/5
@@ -39,10 +40,13 @@ namespace BookShelf.Controllers
             {
                 return NotFound();
             }
+            var user = await GetCurrentUserAsync();
 
             var book = await _context.Book
+                .Where(a => a.ApplicationUserId == user.Id)
                 .Include(b => b.ApplicationUser)
                 .Include(b => b.Author)
+                .Include(b => b.Comments)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (book == null)
             {
@@ -89,13 +93,14 @@ namespace BookShelf.Controllers
                 return NotFound();
             }
 
+            var user = await GetCurrentUserAsync();
+
             var book = await _context.Book.FindAsync(id);
             if (book == null)
             {
                 return NotFound();
             }
-            ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", book.ApplicationUserId);
-            ViewData["AuthorId"] = new SelectList(_context.Author, "Id", "Id", book.AuthorId);
+            ViewData["AuthorId"] = new SelectList(_context.Author.Where(a => a.ApplicationUserId == user.Id), "Id", "Name", book.AuthorId);
             return View(book);
         }
 
@@ -110,6 +115,9 @@ namespace BookShelf.Controllers
             {
                 return NotFound();
             }
+
+            var user = await GetCurrentUserAsync();
+            book.ApplicationUserId = user.Id;
 
             if (ModelState.IsValid)
             {
@@ -131,8 +139,7 @@ namespace BookShelf.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", book.ApplicationUserId);
-            ViewData["AuthorId"] = new SelectList(_context.Author, "Id", "Id", book.AuthorId);
+            ViewData["AuthorId"] = new SelectList(_context.Author, "Id", "Name", book.AuthorId);
             return View(book);
         }
 
