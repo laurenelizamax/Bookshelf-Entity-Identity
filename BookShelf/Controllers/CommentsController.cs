@@ -36,13 +36,12 @@ namespace BookShelf.Controllers
         // GET: Comments/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-           
             if (id == null)
             {
                 return NotFound();
             }
-
             var user = await GetCurrentUserAsync();
+
             var comment = await _context.Comment
                 .Where(a => a.ApplicationUserId == user.Id)
                 .Include(c => c.ApplicationUser)
@@ -88,7 +87,8 @@ namespace BookShelf.Controllers
         }
 
         // GET: Comments/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpGet("Comments/Edit/{id}")]
+        public async Task<IActionResult> Edit(int? id, int bookId)
         {
             if (id == null)
             {
@@ -98,7 +98,6 @@ namespace BookShelf.Controllers
             var comment = await _context.Comment.FindAsync(id);
 
             var user = await GetCurrentUserAsync();
-            comment.ApplicationUserId = user.Id;
 
 
             if (comment == null)
@@ -112,9 +111,9 @@ namespace BookShelf.Controllers
         // POST: Comments/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost("Comments/Edit/{bookId}")]
+        [HttpPost("Comments/Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, int bookId, [Bind("Id,Text,ApplicationUserId,BookId")] Comment comment)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Text,ApplicationUserId,BookId")] Comment comment)
         {
             if (id != comment.Id)
             {
@@ -122,7 +121,7 @@ namespace BookShelf.Controllers
             }
 
             var user = await GetCurrentUserAsync();
-            comment.BookId = bookId;
+            //comment.BookId = bookId;
             comment.ApplicationUserId = user.Id;
 
             if (ModelState.IsValid)
@@ -130,6 +129,7 @@ namespace BookShelf.Controllers
                 try
                 {
                     _context.Update(comment);
+         
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -143,7 +143,7 @@ namespace BookShelf.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction("Details", "Books", new { id = bookId });
+                return RedirectToAction("Details", "Books", new { id = comment.BookId });
             }
             ViewData["BookId"] = new SelectList(_context.Book, "Id", "Id", comment.BookId);
             return View(comment);
