@@ -18,9 +18,13 @@ namespace BookShelf.Models
         [Display(Name = "Year Published")]
         public int YearPublished { get; set; }
         public int Rating { get; set; }
-        public string Genre { get; set; }
         public string ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
         public List<Comment> Comments { get; set; }
+
+        public string Genre { get; set; }
+
+        [Display(Name = "Genres")]
+        public List<BookGenre> BookGenres { get; set; }
     }
 }
